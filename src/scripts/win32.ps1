@@ -180,7 +180,7 @@ Function Add-Tool() {
   }
   if ($tool -eq "symfony") {
     Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $bin_dir\$tool.exe
-    Add-ToProfile $current_profile $tool "New-Alias $tool $bin_dir\$tool.exe" >$null 2>&1
+    Add-ToProfile $current_profile $tool "New-Alias $tool $bin_dir\$tool.exe" 
   } else {
     try {
       Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $bin_dir\$tool
@@ -190,14 +190,14 @@ Function Add-Tool() {
       $bat_content += "SET BIN_TARGET=%~dp0/" + $tool
       $bat_content += "php %BIN_TARGET% %*"
       Set-Content -Path $bin_dir\$tool.bat -Value $bat_content
-      Add-ToProfile $current_profile $tool "New-Alias $tool $bin_dir\$tool.bat" >$null 2>&1
+      Add-ToProfile $current_profile $tool "New-Alias $tool $bin_dir\$tool.bat" 
     } catch { }
   }
   if($tool -eq "phan") {
-    Add-Extension fileinfo >$null 2>&1
-    Add-Extension ast >$null 2>&1
+    Add-Extension fileinfo 
+    Add-Extension ast 
   } elseif($tool -eq "phive") {
-    Add-Extension xml >$null 2>&1
+    Add-Extension xml 
   } elseif($tool -eq "cs2pr") {
     (Get-Content $bin_dir/cs2pr).replace('exit(9)', 'exit(0)') | Set-Content $bin_dir/cs2pr
   } elseif($tool -eq "composer") {
@@ -257,15 +257,15 @@ Function Add-Blackfire() {
   $agent_data = Invoke-WebRequest https://blackfire.io/docs/up-and-running/update | ForEach-Object { $_.tostring() -split "[`r`n]" | Select-String '<td class="version">' | Select-Object -Index 0 }
   $agent_version = [regex]::Matches($agent_data, '<td.*?>(.+)</td>') | ForEach-Object {$_.Captures[0].Groups[1].value }
   $url = "https://packages.blackfire.io/binaries/blackfire-agent/${agent_version}/blackfire-agent-windows_${arch_name}.zip"
-  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $bin_dir\blackfire.zip >$null 2>&1
-  Expand-Archive -Path $bin_dir\blackfire.zip -DestinationPath $bin_dir -Force >$null 2>&1
+  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $bin_dir\blackfire.zip 
+  Expand-Archive -Path $bin_dir\blackfire.zip -DestinationPath $bin_dir -Force 
   Add-ToProfile $current_profile 'blackfire' "New-Alias blackfire $bin_dir\blackfire.exe"
   Add-ToProfile $current_profile 'blackfire-agent' "New-Alias blackfire-agent $bin_dir\blackfire-agent.exe"
   if ((Test-Path env:BLACKFIRE_SERVER_ID) -and (Test-Path env:BLACKFIRE_SERVER_TOKEN)) {
-    blackfire-agent --register --server-id=$env:BLACKFIRE_SERVER_ID --server-token=$env:BLACKFIRE_SERVER_TOKEN >$null 2>&1
+    blackfire-agent --register --server-id=$env:BLACKFIRE_SERVER_ID --server-token=$env:BLACKFIRE_SERVER_TOKEN 
   }
   if ((Test-Path env:BLACKFIRE_CLIENT_ID) -and (Test-Path env:BLACKFIRE_CLIENT_TOKEN)) {
-    blackfire config --client-id=$env:BLACKFIRE_CLIENT_ID --client-token=$env:BLACKFIRE_CLIENT_TOKEN --ca-cert=$php_dir\ssl\cacert.pem >$null 2>&1
+    blackfire config --client-id=$env:BLACKFIRE_CLIENT_ID --client-token=$env:BLACKFIRE_CLIENT_TOKEN --ca-cert=$php_dir\ssl\cacert.pem 
   }
   Add-Log $tick "blackfire" "Added"
   Add-Log $tick "blackfire-agent" "Added"
@@ -299,12 +299,12 @@ if($env:RUNNER -eq 'self-hosted') {
   $php_dir = "$php_dir$version"
   $ext_dir = "$php_dir\ext"
   $cert_source='Curl'
-  Get-CleanPSProfile >$null 2>&1
+  Get-CleanPSProfile 
   New-Item $bin_dir -Type Directory 2>&1 | Out-Null
   Add-Path -PathItem $bin_dir
   if(-not(Test-Path $bin_dir\printf.exe)) {
-    Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/printf/releases/latest/download/printf-$arch.zip" -OutFile "$bin_dir\printf.zip" >$null 2>&1
-    Expand-Archive -Path $bin_dir\printf.zip -DestinationPath $bin_dir -Force >$null 2>&1
+    Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/printf/releases/latest/download/printf-$arch.zip" -OutFile "$bin_dir\printf.zip" 
+    Expand-Archive -Path $bin_dir\printf.zip -DestinationPath $bin_dir -Force 
   }
   if($version -lt 5.6) {
     Add-Log $cross "PHP" "PHP $version is not supported on self-hosted runner"
@@ -316,15 +316,15 @@ if($env:RUNNER -eq 'self-hosted') {
   }
   New-Item $php_dir -Type Directory 2>&1 | Out-Null
   Add-Path -PathItem $php_dir
-  setx PHPROOT $php_dir >$null 2>&1
+  setx PHPROOT $php_dir 
 } else {
   $current_profile = "$PSHOME\Profile.ps1"
   if(-not(Test-Path -LiteralPath $current_profile)) {
-    New-Item -Path $current_profile -ItemType "file" -Force >$null 2>&1
+    New-Item -Path $current_profile -ItemType "file" -Force 
   }
 }
 Step-Log "Setup PhpManager"
-Install-PhpManager >$null 2>&1
+Install-PhpManager 
 Add-Log $tick "PhpManager" "Installed"
 
 Step-Log "Setup PHP"
@@ -343,10 +343,10 @@ if ($null -eq $installed -or -not("$($installed.Version).".StartsWith(($version 
     $version = 'master'
   }
 
-  Install-Php -Version $version -Architecture $arch -ThreadSafe $ts -InstallVC -Path $php_dir -TimeZone UTC -InitialPhpIni Production -Force >$null 2>&1
+  Install-Php -Version $version -Architecture $arch -ThreadSafe $ts -InstallVC -Path $php_dir -TimeZone UTC -InitialPhpIni Production -Force 
 } else {
   if($env:update -eq 'true') {
-    Update-Php $php_dir >$null 2>&1
+    Update-Php $php_dir 
     $status = "Updated to"
   } else {
     $status = "Found"
@@ -362,8 +362,8 @@ if($version -lt "5.5") {
 }
 Update-PhpCAInfo -Path $php_dir -Source $cert_source
 if ($version -eq 'master') {
-  Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/php-extensions-windows/releases/latest/download/php_$env:phpts`_$arch`_pcov.dll" -OutFile $ext_dir"\php_pcov.dll" >$null 2>&1
-  Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/php-extensions-windows/releases/latest/download/php_$env:phpts`_$arch`_xdebug.dll" -OutFile $ext_dir"\php_xdebug.dll" >$null 2>&1
+  Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/php-extensions-windows/releases/latest/download/php_$env:phpts`_$arch`_pcov.dll" -OutFile $ext_dir"\php_pcov.dll" 
+  Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/shivammathur/php-extensions-windows/releases/latest/download/php_$env:phpts`_$arch`_xdebug.dll" -OutFile $ext_dir"\php_xdebug.dll" 
   Set-PhpIniKey -Key 'opcache.jit_buffer_size' -Value '256M' -Path $php_dir
   Set-PhpIniKey -Key 'opcache.jit' -Value '1235' -Path $php_dir
 }
